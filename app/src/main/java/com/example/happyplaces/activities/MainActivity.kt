@@ -6,12 +6,16 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.happyplaces.R
 import com.example.happyplaces.adapters.HappyPlaceAdapter
 import com.example.happyplaces.database.DatabaseHandler
 import com.example.happyplaces.models.HappyPlaceModel
+import com.happyplaces.utils.SwipeToDeleteCallback
 import kotlinx.android.synthetic.main.activity_main.*
+import pl.kitek.rvswipetodelete.SwipeToEditCallback
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +62,28 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
+        val editSwipeHandler = object :SwipeToEditCallback(this){
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val adapter = rv_happy_places_list.adapter as HappyPlaceAdapter
+                adapter.notifyEditItem(this@MainActivity,viewHolder.adapterPosition,
+                    ADD_PLACE_ACTIVITY_REQUEST_CODE)
+            }
+        }
+
+        val editItemTouchHelper = ItemTouchHelper(editSwipeHandler)
+        editItemTouchHelper.attachToRecyclerView(rv_happy_places_list)
+
+        val deleteSwipeHandler = object : SwipeToDeleteCallback(this){
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val adapter = rv_happy_places_list.adapter as HappyPlaceAdapter
+                adapter.removeAt(viewHolder.adapterPosition)
+                getHappyPlacesListFromLocalDB()
+            }
+        }
+
+        val deleteItemHelper = ItemTouchHelper(deleteSwipeHandler)
+        deleteItemHelper.attachToRecyclerView(rv_happy_places_list)
+
 
     }
 
@@ -78,6 +104,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object{
         private const val ADD_PLACE_ACTIVITY_REQUEST_CODE = 1
+        private const val DELETE_PLACE_ACTIVITY_REQUEST_CODE =2
         const val EXTRA_PLACE_DETAILS = "EXTRA_PLACE_DETAILS"
     }
 
